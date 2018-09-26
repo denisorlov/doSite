@@ -1,0 +1,29 @@
+    #headerWraper, #footerWraper {
+      position: fixed; /* Фиксированное положение */
+      left: 0;
+      width: 100%; /* Ширина слоя */
+    }
+    #headerWraper{
+      top: 0; /* Левый нижний угол */
+    }
+    #header, #content, #footer {
+      width: 500px; /* Ширина слоя */
+      margin: 0 auto; /* Выравнивание по центру */
+      padding: 10px; /* Поля вокруг текста */
+    }
+    #header, #footer {
+      background: #39b54a; /* Цвет фона */
+      color: #fff; /* Цвет текста */
+      border-radius: 5px;
+    }
+    #header {
+      height: 20px;
+    }
+    #content {
+      margin: 40px auto 40px;
+      border: dashed 1px lightgray;
+      border-radius: 5px;
+    }
+    #footerWraper {
+      bottom: 0;
+    }

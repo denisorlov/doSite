@@ -1,0 +1,30 @@
+RewriteEngine On
+RewriteBase /
+
+AddDefaultCharset utf-8
+Options All -Indexes
+
+# шаблон: запретить запрос к неким файлам, кроме папок/файлов...
+# запретить .php, если не в папке api и не корневой index.php
+RewriteCond %{REQUEST_URI} \.php$
+RewriteCond %{REQUEST_URI} !^/api
+RewriteRule !^index.php$ - [F,L]
+
+# шаблон: запретить в неких папках запросы, кроме файлов...
+#RewriteCond %{REQUEST_URI} ^/soap
+#RewriteRule !\.xml$ - [F,L]
+#RewriteRule ^soap/ - [NC,L]
+
+# разрешить файлы в папках (кроме запрещенного выше)
+RewriteRule ^public/ - [NC,L]
+RewriteRule ^api/ - [NC,L]
+
+# разрешить файлы (кроме запрещенного выше)
+RewriteRule ^favicon.ico - [NC,L]
+
+# запрос к прочим файлам (.ext) кроме корневого index.php - запретить!
+RewriteCond %{REQUEST_URI} !^/index.php
+RewriteRule \.[^/]+$ - [F,L]
+
+# остальное - через index.php
+RewriteRule !^index.php$ index.php [NC,L,QSA]
