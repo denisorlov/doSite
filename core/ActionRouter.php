@@ -12,6 +12,9 @@ class ActionRouter
   private $module;
   private $action;
 
+  const DEFAULT_MODULE = 'index';
+  const DEFAULT_ACTION = 'index';
+
   /**
    * ActionRouter constructor.
    * @param $rootPath
@@ -27,8 +30,8 @@ class ActionRouter
     $sRUri = array_shift($noQS); // отскекаем QUERY_STRING
     $arrRUri = explode('/', $sRUri);
 
-    $this->module = !empty($arrRUri[1])? $arrRUri[1] : 'index';
-    $this->action = !empty($arrRUri[2])? $arrRUri[2] : 'index';
+    $this->module = !empty($arrRUri[1])? $arrRUri[1] : self::DEFAULT_MODULE;
+    $this->action = !empty($arrRUri[2])? $arrRUri[2] : self::DEFAULT_ACTION;
 
     spl_autoload_register(function($className) {
       $path = $this->checkActionClassPath($className);
@@ -64,30 +67,36 @@ class ActionRouter
     return true; // dumb
   }
 
+  public function buildClassName($module, $action){
+    return $this->actionsNameSpace.ucfirst($module).'\\'.ucfirst($action).'Action';
+  }
+
   public function routeToAction(){
-    $actionClassName = $this->actionsNameSpace.ucfirst($this->module).'\\'.ucfirst($this->action).'Action';
+    $actionClassName = $this->buildClassName($this->module, $this->action);
     $responseContentType = ActionRender::defineResponseContentType();
 
-    if($this->checkActionClassPath($actionClassName)){
+    if($this->checkActionClassPath($actionClassName)) { // class exists
       /** @var IAction $action */
       $action = new $actionClassName();
-      if($action->getResponseContentType()!== $responseContentType){
+      if ($action->getResponseContentType() !== $responseContentType) { // check response format
         ActionRender::postForbidden();
       }
+    }else{ // class not exists
+      if($responseContentType != ActionRender::ct_TEXT_HTML) { // if not text/html
+       header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
+       die();
+      }
+    }
 
-      if($this->checkAccessToAction()){
-        $render = new ActionRender($action);
-        $render->output();
-      }else{
-        ActionRender::postForbidden();
+    if($this->checkAccessToAction()){
+      if($responseContentType === ActionRender::ct_TEXT_HTML){ // if text/html
+        $actionClassName = $this->buildClassName(self::DEFAULT_MODULE, self::DEFAULT_ACTION);
+        $action = new $actionClassName();
       }
+      $render = new ActionRender($action);
+      $render->output();
     }else{
-      header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
-      if($responseContentType === ActionRender::ct_TEXT_HTML){
-        // @TODO 404 page
-        echo '<h3>404: Такой страницы не найдено...</h3><a href="/">Вернуться на Главную...</a>';
-      }
-      die();
+      ActionRender::postForbidden();
     }
   }
 }
