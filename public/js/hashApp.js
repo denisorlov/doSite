@@ -7,9 +7,9 @@ var Application = function(setting) {
   this.modules = {};
 };
 Application.prototype = {
-  route: function(_hash){
-    var app = this, _hash = _hash || '',
-      pHash = this.parseHash(_hash),
+  route: function(_path){
+    var app = this, path = _path || '',
+      pHash = this.parsePath(path),
       module = pHash.module,
       action = pHash.action
     ;
@@ -17,29 +17,29 @@ Application.prototype = {
       var scrpath = this.setting.js_root+this.setting.modules_dir+module+'.js';
       $.getScript( scrpath )
         .done(function( script, textStatus ) {
-          app.runAction(_hash);
+          app.runAction(path);
         })
         .fail(function( jqxhr, settings, exception ) {
           throw new Error( 'Failed getScript ' + scrpath);
         });
     }else{
-      app.runAction(_hash);
+      app.runAction(path);
     }
   },
-  runAction: function(_hash){
-    var pHash = this.parseHash(_hash);
+  runAction: function(path){
+    var pHash = this.parsePath(path);
     if(!this.modules[pHash.module]){
       throw new Error( 'Application has not module "'+pHash.module+'"');
     }else
     if(typeof this.modules[pHash.module][pHash.action] !== 'function'){
       throw new Error( 'Module "'+pHash.module+'" has not method '+pHash.action);
     }else{
-      this.modules[pHash.module][pHash.action](_hash);
+      this.modules[pHash.module][pHash.action](path);
     }
   },
-  parseHash: function(_hash){
+  parsePath: function(path){
     var i, res = {},
-      aHash = _hash.split('/');
+      aHash = path.split('/');
       res.module = aHash[0] || 'index';
       res.action = aHash[1] || 'index';
     for (i=2;i<aHash.length;i+=2){
@@ -59,9 +59,9 @@ $( document ).ready(function() {
     if(event.target.tagName === 'A'){
       var link = event.target;
       if(link.hash.length>0){
-        var _hash = link.hash.substr(1); // without #
-        if($('a[name="'+_hash+'"]').length < 1){
-          doApp.route(_hash);
+        var path = link.hash.substr(1); // without #
+        if($('a[name="'+path+'"]').length < 1){
+          doApp.route(path);
         }
       }
     }
