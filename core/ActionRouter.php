@@ -61,9 +61,9 @@ class ActionRouter
   private function checkAccessToAction(){
     // @TODO this method should be implemented!
     // for example:
-    // app->run();
-    // app->checkAuthority();
-    // return app->checkAccessToAction($this->module, $this->action);
+    // session_start();
+    // checkAuthority();
+    // return checkAccessToAction($this->module, $this->action);
     return true; // dumb
   }
 
@@ -73,30 +73,27 @@ class ActionRouter
 
   public function routeToAction(){
     $actionClassName = $this->buildClassName($this->module, $this->action);
-    $responseContentType = ActionRender::defineResponseContentType();
+    $responser = new ActionResponser(ROOT_PATH.'/index.html.php');
 
-    if($this->checkActionClassPath($actionClassName)) { // class exists
-      /** @var IAction $action */
-      $action = new $actionClassName();
-      if ($action->getResponseContentType() !== $responseContentType) { // check response format
-        ActionRender::postForbidden();
-      }
-    }else{ // class not exists
-      if($responseContentType != ActionRender::ct_TEXT_HTML) { // if not text/html
-       header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
-       die();
-      }
+    if(!$this->checkActionClassPath($actionClassName)) { // class not exists
+      $responser->sendResponse(ActionResponser::rc_NOT_FOUND);
     }
 
     if($this->checkAccessToAction()){
-      if($responseContentType === ActionRender::ct_TEXT_HTML){ // if text/html
-        $actionClassName = $this->buildClassName(self::DEFAULT_MODULE, self::DEFAULT_ACTION);
+      /** @var AAction $action */
+      try {
         $action = new $actionClassName();
+        $responser->setAction($action);
+        $action->run();
+        $response = $action->prepareResponse($responser->getResponseContentType());
+        $http_response_code = ActionResponser::rc_SUCCESS;
+      } catch (\Throwable $e) {
+        $response = $responser->treatException($e);
+        $http_response_code = ActionResponser::rc_INTERNAL_SERVER_ERROR;
       }
-      $render = new ActionRender($action);
-      $render->output();
+      $responser->sendResponse($http_response_code, $response);
     }else{
-      ActionRender::postForbidden();
+      $responser->sendResponse(ActionResponser::rc_FORBIDDEN);
     }
   }
 }

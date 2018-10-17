@@ -8,5 +8,6 @@ define('ROOT_PATH', realpath(__DIR__));
 
 require_once ROOT_PATH.'/core/ActionRouter.php';
 
+$HTML = '';
 $actionRouter = new \core\ActionRouter(ROOT_PATH, '\Actions\\');
 $actionRouter->routeToAction();
