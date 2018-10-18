@@ -21,7 +21,7 @@
 </div>
 </div>
 <div id="content">
-
+<?php echo '<div style="opacity: 0.1">'.$HTML.'</div>'; ?>
 </div>
 <div id="footerWraper">
 <div id="footer">

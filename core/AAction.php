@@ -8,9 +8,9 @@
 
 namespace core;
 
-abstract class AAction implements IAction
+abstract class AAction //implements IAction
 {
-  private $result;
+  protected $result;
 
   public function run()
   {

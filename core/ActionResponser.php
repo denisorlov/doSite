@@ -31,17 +31,17 @@ class ActionResponser
     $this->responseContentType = $this->defineResponseContentType();
   }
 
-  public static function logException(\Throwable $e)
+  public static function logException(\Exception $e)
   {
     $now = time();
     $date = date('c', $now); // 2004-02-12T15:19:21+00:00
     $logMsg=$date."\t".'Exception '.$e->getCode().': "'.$e->getMessage().'" at '.
-      $e->getFile().':'.$e->getLine()."\n"."Trace:\n".$e->getTraceAsString()."\n";
+      $e->getFile().':'.$e->getLine().' Trace: '.$e->getTraceAsString();
     error_log($logMsg);
     return $now;
   }
 
-  public function treatException(\Throwable $e)
+  public function treatException(\Exception $e)
   {
     $logTime = self::logException($e);
     $result = $e instanceof PublicException ? $e->getMessage() :
@@ -72,7 +72,7 @@ class ActionResponser
   {
     switch($http_response_code){
       case self::rc_FORBIDDEN:
-        header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden', true, 403);
+        header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden', true, self::rc_FORBIDDEN);
         $response = $this->isHtmlResponse() ? '<h3>Доступ запрещен.</h3><a href="/">На главную...</a>' : null;
         $this->echoResponse($response);
         break;
@@ -81,8 +81,8 @@ class ActionResponser
         $response = $this->isHtmlResponse() ? '<h3>Страница не найдена.</h3><a href="/">На главную...</a>' : null;
         $this->echoResponse($response);
         break;
-      case self::rc_SUCCESS:
-        header("Content-Type: {$this->responseContentType}; charset={$this->charset}");
+      default: //case self::rc_SUCCESS:
+        header("Content-Type: {$this->responseContentType}; charset={$this->charset}", true, $http_response_code);
         $this->echoResponse($response);
         break;
     }
@@ -90,16 +90,20 @@ class ActionResponser
 
   public function echoResponse($response=null)
   {
+    $withTemplate = false;
     if($this->isHtmlResponse()) {
-      global $HTML;
-      $HTML = $response;
       if(!self::isXMLHttpRequest()){
         $templatePath = $this->action && is_file($this->action->getTemplatePath()) ? $this->action->getTemplatePath() : $this->mainTemplatePath;
         if(is_file($templatePath)){
+          $withTemplate = true;
+          global $HTML;
+          $HTML = $response;
           include $templatePath;
         }
       }
-    }elseif($response!==null){
+    }
+
+    if(!$withTemplate && $response!==null){
       echo $response;
     }
     exit();

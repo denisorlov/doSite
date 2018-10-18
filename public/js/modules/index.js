@@ -1,8 +1,17 @@
 doApp.modules.index = {
   index: function(aHash){
-    $('#content').html('<h1>Привет на главной странице!</h1>'+
-      '<table><tr> <td><a href="/">Главная</a></td> <td><a href="/user">Пользователи</a></td> <td><a href="/index/about">About</a></td> </tr></table>'
-    );
+    $.ajax({
+      url: '/',             // указываем URL и
+      dataType : 'json',                     // тип загружаемых данных
+      success: function (data, textStatus, jqXHR) { // вешаем свой обработчик на функцию succes
+        $('#content').html('from frontend'+data.result);
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown ) {
+      if(jqXHR.responseJSON && jqXHR.responseJSON.error){
+        doApp.alert(jqXHR.responseJSON.error);
+      }
+    })
+    ;
   },
   about: function(aHash){
     $('#content').html('<h1>И о проекте...</h1>'+

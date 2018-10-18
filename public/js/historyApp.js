@@ -34,7 +34,10 @@ Application.prototype = {
     if(typeof this.modules[pPath.module][pPath.action] !== 'function'){
       throw new Error( 'Module "'+pPath.module+'" has not method '+pPath.action);
     }else{
-      this.modules[pPath.module][pPath.action](path);
+      setTimeout((function(_this, _pPath, _path){
+        return function(){_this.modules[_pPath.module][_pPath.action](_path);}
+      }(this, pPath, path)), 2000);
+      //this.modules[pPath.module][pPath.action](path);
     }
   },
   parsePath: function(path){
@@ -46,6 +49,10 @@ Application.prototype = {
       res[aPath[i]] = aPath[i+1] || null;
     }
     return res;
+  },
+
+  alert: function(mess){
+    alert(mess);
   }
 };
 /// create application

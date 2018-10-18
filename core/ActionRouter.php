@@ -87,7 +87,7 @@ class ActionRouter
         $action->run();
         $response = $action->prepareResponse($responser->getResponseContentType());
         $http_response_code = ActionResponser::rc_SUCCESS;
-      } catch (\Throwable $e) {
+      } catch (\Exception $e) {
         $response = $responser->treatException($e);
         $http_response_code = ActionResponser::rc_INTERNAL_SERVER_ERROR;
       }
