@@ -7,6 +7,7 @@ var Application = function(setting) {
   this.modules = {};
 };
 Application.prototype = {
+  console_log: true, // only for developing
   route: function(_path){
     var app = this, path = _path || '',
       pPath = this.parsePath(path),
@@ -50,6 +51,65 @@ Application.prototype = {
     }
     return res;
   },
+  ajax: function(url, data, dataType, params, successFn, failFn){
+    params = params || {};
+    params.method = params.method || "GET";
+    params.no_cache = params.no_cache || false;
+    url =  url || '/';
+    data = data || {};
+    dataType  = dataType || 'json';// тип загружаемых данных
+
+
+
+    var doApp = this,
+      cacheKey = null;
+
+    var doneFn = function(data, textStatus, jqXHR) {
+      if(typeof successFn === 'function'){
+        successFn.apply(null, [].slice.call(arguments));
+      }else{
+        throw new Error('Not defined ajax success method.');
+      }
+    };
+
+    if(!params.no_cache){
+      try{
+        var cacheKeyOb = [
+          url, data, dataType, params
+        ];
+        cacheKey = JSON.stringify(cacheKeyOb);
+        var cacheData = this.cache.get(cacheKey);
+        if(cacheData) {
+          doneFn(cacheData); if(this.console_log) {console.log('gotten from cache')};
+          return;
+        }
+      }catch(_e_){
+      }
+    }
+
+    $.ajax({
+      method: params.method,
+      url: url,
+      data: data,
+      dataType : dataType
+    }).done(function(data, textStatus, jqXHR) {
+      if(cacheKey){
+        doApp.cache.add(cacheKey, data); if(doApp.console_log) {console.log('added to cache')};
+      }
+      doneFn.apply(null, [].slice.call(arguments));
+    }).fail(function(jqXHR, textStatus, errorThrown ) {
+      if(typeof failFn === 'function'){
+        failFn.apply(null, [].slice.call(arguments));
+      } else {
+        var errMsg = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : jqXHR.status +' '+ jqXHR.statusText;
+        doApp.alert(errMsg);
+      }
+    }).always(function(data, textStatus, jqXHR) {
+      //console.log('ajax.always');
+      //console.dir(arguments);
+    })
+    ;
+  },
 
   alert: function(mess){
     alert(mess);
@@ -59,6 +119,10 @@ Application.prototype = {
 var doApp = new Application({
   js_root:      '/public/js',
   modules_dir:  '/modules/'
+});
+doApp.cache = new doCache({
+  max_length: 10000, // max length of data, not count of store array
+  default_life_time_sec: 10
 });
 
 $( document ).ready(function() {

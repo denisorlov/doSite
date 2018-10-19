@@ -1,17 +1,8 @@
 doApp.modules.index = {
   index: function(aHash){
-    $.ajax({
-      url: '/',             // указываем URL и
-      dataType : 'json',                     // тип загружаемых данных
-      success: function (data, textStatus, jqXHR) { // вешаем свой обработчик на функцию succes
-        $('#content').html('from frontend'+data.result);
-      }
-    }).fail(function(jqXHR, textStatus, errorThrown ) {
-      if(jqXHR.responseJSON && jqXHR.responseJSON.error){
-        doApp.alert(jqXHR.responseJSON.error);
-      }
-    })
-    ;
+    doApp.ajax('/',null,null,null, function (data, textStatus, jqXHR) { // вешаем свой обработчик на функцию success
+      $('#content').html('from frontend '+(new Date().toLocaleString())+data.result);
+    });
   },
   about: function(aHash){
     $('#content').html('<h1>И о проекте...</h1>'+
@@ -19,12 +10,9 @@ doApp.modules.index = {
       '</table>'+
       '<div id="phpInfo"></div>'
     );
-    $.ajax({
-      url: '/index/about',             // указываем URL и
-      dataType : 'text',                     // тип загружаемых данных
-      success: function (data, textStatus) { // вешаем свой обработчик на функцию succes
-        $('#phpInfo').html(data);
-      }
+
+    doApp.ajax('/index/about',null,'text',null, function (data, textStatus, jqXHR) {
+      $('#phpInfo').html(data);
     });
   }
 }

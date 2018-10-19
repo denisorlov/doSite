@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/public/css/style.css">
   <!--script src="/public/js/hashApp.js"></script-->
   <script src="/public/js/history.min.js"></script>
+  <script src="/public/js/cache.js"></script>
   <script src="/public/js/historyApp.js"></script>
   <script>
   </script>
