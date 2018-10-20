@@ -1,12 +1,39 @@
+// dependencies
 if(!window.jQuery){
-  throw new Error( 'jQuery is required');
+  throw new Error( 'jQuery 3.0+ is required');
+}
+if(typeof history.pushState !== 'function'){
+  throw new Error( 'HTML5-History-API is required, visit https://github.com/devote/HTML5-History-API');
 }
 
-var Application = function(setting) {
-  this.setting = setting;
+$do = window.$do?$do:{};
+/** $do dependences */
+if(!$do.cache || typeof $do.cache.Object!=='function'){
+  throw new Error( '$do.cache is required, visit https://github.com/denisorlov');
+}
+$do.application = {_name:'do.application'};
+
+/** Options of $do.application.Object */
+$do.application.Options = function(obj) {
+  this.js_root = '/public/js';
+  this.modules_dir = '/modules/';
+
+  for(var k in this)// переопределяем
+    this[k] = obj && obj[k]!==undefined ? obj[k] : this[k];
+};
+/**
+ * @author Денис Орлов http://denisorlovmusic.ru/
+ * @param _options $do.application.Options
+ * @constructor
+ */
+$do.application.Object = function(_options) {
+  $do.application.Options.call(this);// наследуем настройки
+  for(var k in this)// переопределяем
+    this[k] = _options && _options[k]!==undefined ? _options[k] : this[k];
+
   this.modules = {};
 };
-Application.prototype = {
+$do.application.Object.prototype = {
   console_log: true, // only for developing
   route: function(_path){
     var app = this, path = _path || '',
@@ -15,7 +42,7 @@ Application.prototype = {
       action = pPath.action
     ;
     if(!app.modules[module]){
-      var scrpath = this.setting.js_root+this.setting.modules_dir+module+'.js';
+      var scrpath = this.js_root+this.modules_dir+module+'.js';
       $.getScript( scrpath )
         .done(function( script, textStatus ) {
           app.runAction(path);
@@ -35,10 +62,10 @@ Application.prototype = {
     if(typeof this.modules[pPath.module][pPath.action] !== 'function'){
       throw new Error( 'Module "'+pPath.module+'" has not method '+pPath.action);
     }else{
-      setTimeout((function(_this, _pPath, _path){
-        return function(){_this.modules[_pPath.module][_pPath.action](_path);}
-      }(this, pPath, path)), 2000);
-      //this.modules[pPath.module][pPath.action](path);
+      //setTimeout((function(_this, _pPath, _path){
+        //return function(){_this.modules[_pPath.module][_pPath.action](_path);}
+      //}(this, pPath, path)), 2000);
+      this.modules[pPath.module][pPath.action](path);
     }
   },
   parsePath: function(path){
@@ -51,6 +78,8 @@ Application.prototype = {
     }
     return res;
   },
+  _current_ajax_query: '',
+  /**  */
   ajax: function(url, data, dataType, params, successFn, failFn){
     params = params || {};
     params.method = params.method || "GET";
@@ -58,8 +87,6 @@ Application.prototype = {
     url =  url || '/';
     data = data || {};
     dataType  = dataType || 'json';// тип загружаемых данных
-
-
 
     var doApp = this,
       cacheKey = null;
@@ -78,23 +105,31 @@ Application.prototype = {
           url, data, dataType, params
         ];
         cacheKey = JSON.stringify(cacheKeyOb);
-        var cacheData = this.cache.get(cacheKey);
+        if(cacheKey === this._current_ajax_query){
+          if(this.console_log) {console.log('current_ajax_query already is '+cacheKey)};
+          return;
+        }
+        var cacheData = this.cacheAjax.get(cacheKey);
         if(cacheData) {
-          doneFn(cacheData); if(this.console_log) {console.log('gotten from cache')};
+          doneFn(cacheData); if(this.console_log) {console.log('gotten from cacheAjax')};
           return;
         }
       }catch(_e_){
       }
     }
 
+    if(cacheKey){
+		this._current_ajax_query = cacheKey; if(this.console_log) {console.log('current_ajax_query is '+cacheKey+'...')};
+	}	
     $.ajax({
       method: params.method,
       url: url,
       data: data,
+      cache: false, /* special for IE */
       dataType : dataType
     }).done(function(data, textStatus, jqXHR) {
       if(cacheKey){
-        doApp.cache.add(cacheKey, data); if(doApp.console_log) {console.log('added to cache')};
+        doApp.cacheAjax.add(cacheKey, data); if(doApp.console_log) {console.log('added to cacheAjax')};
       }
       doneFn.apply(null, [].slice.call(arguments));
     }).fail(function(jqXHR, textStatus, errorThrown ) {
@@ -102,11 +137,10 @@ Application.prototype = {
         failFn.apply(null, [].slice.call(arguments));
       } else {
         var errMsg = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : jqXHR.status +' '+ jqXHR.statusText;
-        doApp.alert(errMsg);
+        doApp.alert('Response from "'+url+'": '+errMsg);
       }
     }).always(function(data, textStatus, jqXHR) {
-      //console.log('ajax.always');
-      //console.dir(arguments);
+	    doApp._current_ajax_query = null;
     })
     ;
   },
@@ -116,11 +150,11 @@ Application.prototype = {
   }
 };
 /// create application
-var doApp = new Application({
+var doApp = new $do.application.Object({
   js_root:      '/public/js',
   modules_dir:  '/modules/'
 });
-doApp.cache = new doCache({
+doApp.cacheAjax = new $do.cache.Object({
   max_length: 10000, // max length of data, not count of store array
   default_life_time_sec: 10
 });

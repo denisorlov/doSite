@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="/public/css/style.css">
   <!--script src="/public/js/hashApp.js"></script-->
   <script src="/public/js/history.min.js"></script>
-  <script src="/public/js/cache.js"></script>
-  <script src="/public/js/historyApp.js"></script>
+  <script src="/public/js/do.cache.js"></script>
+  <script src="/public/js/do.application.js"></script>
   <script>
   </script>
   <title>Фиксированный подвал</title>

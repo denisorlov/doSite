@@ -77,8 +77,7 @@ class ActionRouter
 
     if(!$this->checkActionClassPath($actionClassName)) { // class not exists
       $responser->sendResponse(ActionResponser::rc_NOT_FOUND);
-    }
-
+    }else
     if($this->checkAccessToAction()){
       /** @var AAction $action */
       try {
