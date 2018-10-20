@@ -79,8 +79,8 @@ class ActionRouter
       $responser->sendResponse(ActionResponser::rc_NOT_FOUND);
     }else
     if($this->checkAccessToAction()){
-      /** @var AAction $action */
       try {
+        /** @var AAction $action */
         $action = new $actionClassName();
         $responser->setAction($action);
         $action->run();

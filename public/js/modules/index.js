@@ -1,6 +1,8 @@
 doApp.modules.index = {
   index: function(aHash){
-    doApp.ajax('/',null,null,null, function (data, textStatus, jqXHR) { // вешаем свой обработчик на функцию success
+    doApp.ajax('/',
+      {obj: {num:25.25, bool:false, str:'строка'}},
+      null,null, function (data, textStatus, jqXHR) { // вешаем свой обработчик на функцию success
       $('#content').html('from frontend '+(new Date().toLocaleString())+data.result);
     });
   },

@@ -10,7 +10,20 @@ namespace core;
 
 abstract class AAction //implements IAction
 {
+  protected $request_data;
   protected $result;
+
+  /**
+   * AAction constructor.
+   */
+  public function __construct()
+  {
+    $this->request_data = $this->prepareRequestData();
+  }
+
+  protected function prepareRequestData(){
+    return !empty($_REQUEST['jsonData']) ? json_decode($_REQUEST['jsonData'], true) : $_REQUEST;
+  }
 
   public function run()
   {

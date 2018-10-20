@@ -7,7 +7,7 @@ doApp.modules.user = {
       '<pre id="user_list"></pre>'
     );
 
-    doApp.ajax('/user/list',null,null,null, function (data, textStatus, jqXHR) {
+    doApp.ajax('/user/list',null,'json',null, function (data, textStatus, jqXHR) {
       //console.dir(arguments);
       var res = '';
       for(var k in data[1])

@@ -25,19 +25,25 @@ $do.application.Options = function(obj) {
 /**
  * @example:
  <pre>
- doApp = new $do.application.Object({
-  js_root:      '/public/js',
-  modules_dir:  '/modules/'
- });
- doApp.activateHistorySPAMode();</pre>
+ // create with custom options:
+ // doApp = new $do.application.Object({
+ //  js_root:      '/public/my_js',
+ //  modules_dir:  '/my_modules/'
+ // });
+ // or create with default options (see $do.application.Options):
+ doApp = new $do.application.Object();
+ doApp.activateHistorySPAMode();
+ </pre>
 
- * For treating main page on url "/" or "/index/index" you should have module index.js (in modules_dir) with code <pre>
+ // For treating main page on url "/" or "/index/index" you should have module index.js (in modules_dir) with code: <pre>
+ // module name
  doApp.modules.index = {
+    // action name
     index: function(aHash){
       // some your actions...
     }
   }</pre>
- Similarly for  treating any urls: "/about/index", "/about/contact" etc.
+ //Similarly for  treating any urls: "/about/index", "/about/contact" etc.
  *
  * @author Денис Орлов http://denisorlovmusic.ru/, https://github.com/denisorlov
  * @param _options $do.application.Options
@@ -100,7 +106,7 @@ $do.application.Object.prototype = {
   /**  */
   ajax: function(url, data, dataType, params, successFn, failFn){
     params = params || {};
-    params.method = params.method || "GET";
+    params.method = params.method || 'POST';
     params.no_cache = params.no_cache || false;
     url =  url || '/';
     data = data || {};
@@ -137,12 +143,17 @@ $do.application.Object.prototype = {
     }
 
     if(cacheKey){
-		this._current_ajax_query = cacheKey; if(this.console_log) {console.log('current_ajax_query is '+cacheKey+'...')};
-	}	
+		  this._current_ajax_query = cacheKey; if(this.console_log) {console.log('current_ajax_query is '+cacheKey+'...')};
+	  }
+    var jsonData = null;
+	  try{
+      jsonData = JSON.stringify(data);
+    }catch(_e_){}
+
     $.ajax({
       method: params.method,
       url: url,
-      data: data,
+      data: jsonData ? {jsonData: jsonData} : data,
       cache: false, /* special for IE */
       dataType : dataType
     }).done(function(data, textStatus, jqXHR) {
