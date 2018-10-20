@@ -1,5 +1,7 @@
 doApp.modules.user = {
   index: function(aHash){
+    if(doApp.just_loaded_from_server) return;
+
     $('#content').html(
       '<h1>Привет на странице пользователей!</h1>'+
       '<pre id="user_list"></pre>'

@@ -17,12 +17,29 @@ $do.application = {_name:'do.application'};
 $do.application.Options = function(obj) {
   this.js_root = '/public/js';
   this.modules_dir = '/modules/';
+  this.cacheAjax = new $do.cache.Object();
 
   for(var k in this)// переопределяем
     this[k] = obj && obj[k]!==undefined ? obj[k] : this[k];
 };
 /**
- * @author Денис Орлов http://denisorlovmusic.ru/
+ * @example:
+ <pre>
+ doApp = new $do.application.Object({
+  js_root:      '/public/js',
+  modules_dir:  '/modules/'
+ });
+ doApp.activateHistorySPAMode();</pre>
+
+ * For treating main page on url "/" or "/index/index" you should have module index.js (in modules_dir) with code <pre>
+ doApp.modules.index = {
+    index: function(aHash){
+      // some your actions...
+    }
+  }</pre>
+ Similarly for  treating any urls: "/about/index", "/about/contact" etc.
+ *
+ * @author Денис Орлов http://denisorlovmusic.ru/, https://github.com/denisorlov
  * @param _options $do.application.Options
  * @constructor
  */
@@ -66,6 +83,7 @@ $do.application.Object.prototype = {
         //return function(){_this.modules[_pPath.module][_pPath.action](_path);}
       //}(this, pPath, path)), 2000);
       this.modules[pPath.module][pPath.action](path);
+      doApp.just_loaded_from_server = false;
     }
   },
   parsePath: function(path){
@@ -144,41 +162,49 @@ $do.application.Object.prototype = {
     })
     ;
   },
+  /**
+   * Execute only once!
+   */
+  activateHistorySPAMode: function(){
+    $( document ).ready(function() {
+      $( document ).bind( 'click', function( event ) {
+        if(event.target.tagName === 'A'){
+          var link = event.target;
+          if(window.location.host === link.host){
+            history.pushState(null, null, link.href);
+            // тут можете вызвать подгрузку данных и т.п.
+            var _pathname = link.pathname.substr(1); // without /
+            doApp.route(_pathname);
+            // не даем выполнить действие по умолчанию
+            return false;
+          }
+        }
+      });
+      // вешаем событие на popstate которое срабатывает при нажатии back/forward в браузере
+      $(window).on('popstate', function(e) {
+        // тут можете вызвать подгрузку данных и т.п.
+        var _pathname = location.pathname.substr(1); // without /
+        doApp.route(_pathname);
+      });
+
+      /** is the first loading of page, with this flag you can cancel calling repeated loading from js actions */
+      doApp.just_loaded_from_server = true;
+      // first loading from js actions
+      doApp.route(window.location.pathname.substr(1)); // without /
+    });
+  },
 
   alert: function(mess){
     alert(mess);
   }
 };
-/// create application
-var doApp = new $do.application.Object({
+/// create global application
+doApp = new $do.application.Object({
   js_root:      '/public/js',
   modules_dir:  '/modules/'
+  ,cacheAjax: new $do.cache.Object({
+    max_length: 10000, // max length of data, not count of store array
+    default_life_time_sec: 10
+  })
 });
-doApp.cacheAjax = new $do.cache.Object({
-  max_length: 10000, // max length of data, not count of store array
-  default_life_time_sec: 10
-});
-
-$( document ).ready(function() {
-  $( document ).bind( 'click', function( event ) {
-    if(event.target.tagName === 'A'){
-      var link = event.target;
-      if(window.location.host === link.host){
-        history.pushState(null, null, link.href);
-        // тут можете вызвать подгрузку данных и т.п.
-        var _pathname = link.pathname.substr(1); // without /
-        doApp.route(_pathname);
-        // не даем выполнить действие по умолчанию
-        return false;
-      }
-    }
-  });
-  // вешаем событие на popstate которое срабатывает при нажатии back/forward в браузере
-  $(window).on('popstate', function(e) {
-    // тут можете вызвать подгрузку данных и т.п.
-    var _pathname = location.pathname.substr(1); // without /
-    doApp.route(_pathname);
-  });
-
-  doApp.route(window.location.pathname.substr(1)); // without /
-});
+doApp.activateHistorySPAMode();

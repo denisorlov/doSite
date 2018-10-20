@@ -1,15 +1,6 @@
 $do = window.$do?$do:{};
 $do.cache = {_name:'do.cache'};
 
-$do.cache.Options = function(obj){
-  /** max length of stringified data (not count of items of store array!) */
-  this.max_length = 10000;
-  /** default life time in sec */
-  this.default_life_time_sec = 600;
-
-  for(var k in this)// переопределяем
-    this[k] = obj && obj[k]!==undefined ? obj[k] : this[k];
-}
 /**
  * FrontEnd cache.
  * @author Денис Орлов http://denisorlovmusic.ru/
@@ -17,7 +8,7 @@ $do.cache.Options = function(obj){
  * example: <pre>
  var cache = new $do.cache.Object({
     max_length: 10000, // max length of stringified data (not count of items of store array!)
-    default_life_time_sec: 600 // 10 min
+    default_life_time_sec: 300 // 5 min
   });
 
  cache.add('some_key_1', value1 ); // for default_life_time_sec
@@ -36,6 +27,17 @@ $do.cache.Object = function(_options) {
   for(var k in this)// переопределяем
     this[k] = _options && _options[k]!==undefined ? _options[k] : this[k];
 };
+
+$do.cache.Options = function(obj){
+  /** max length of stringified data (not count of items of store array!) */
+  this.max_length = 524288; // ~ 1Mb, since each string character contains 2 bytes
+  /** default life time in sec */
+  this.default_life_time_sec = 600; // 10 min
+
+  for(var k in this)// переопределяем
+    this[k] = obj && obj[k]!==undefined ? obj[k] : this[k];
+};
+
 $do.cache.Object.prototype = {
   store:[],
   getStore: function(){
