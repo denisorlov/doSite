@@ -76,7 +76,7 @@ class ActionRouter
     $responser = new ActionResponser(ROOT_PATH.'/index.html.php');
 
     if(!$this->checkActionClassPath($actionClassName)) { // class not exists
-      $responser->sendResponse(ActionResponser::rc_NOT_FOUND);
+      $responser->setHttpResponseCode(ActionResponser::rc_NOT_FOUND);
     }else
     if($this->checkAccessToAction()){
       try {
@@ -90,9 +90,11 @@ class ActionRouter
         $response = $responser->treatException($e);
         $http_response_code = ActionResponser::rc_INTERNAL_SERVER_ERROR;
       }
-      $responser->sendResponse($http_response_code, $response);
+      $responser->setHttpResponseCode($http_response_code);
+      $responser->setResponse($response);
     }else{
-      $responser->sendResponse(ActionResponser::rc_FORBIDDEN);
+      $responser->setHttpResponseCode(ActionResponser::rc_FORBIDDEN);
     }
+    $responser->sendResponse();
   }
 }

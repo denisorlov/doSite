@@ -20,6 +20,9 @@ class ActionResponser
   private $mainTemplatePath = null;
   private $responseContentType = self::ct_TEXT_HTML;
 
+  private $http_response_code = self::rc_SUCCESS;
+  private $response = null;
+
   public $charset = 'UTF-8';
 
   /**
@@ -68,27 +71,27 @@ class ActionResponser
     return $result;
   }
 
-  public function sendResponse($http_response_code=self::rc_SUCCESS, $response=null)
+  public function sendResponse()
   {
-    switch($http_response_code){
+    switch($this->http_response_code){
       case self::rc_FORBIDDEN:
         header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden', true, self::rc_FORBIDDEN);
-        $response = $this->isHtmlResponse() ? '<h3>Доступ запрещен.</h3><a href="/">На главную...</a>' : null;
-        $this->echoResponse($response);
+        $this->response = $this->isHtmlResponse() ? '<h3>Доступ запрещен.</h3><a href="/">На главную...</a>' : null;
         break;
       case self::rc_NOT_FOUND:
         header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found', true, self::rc_NOT_FOUND);
-        $response = $this->isHtmlResponse() ? '<h3>Страница не найдена.</h3><a href="/">На главную...</a>' : null;
-        $this->echoResponse($response);
+        $this->response = $this->isHtmlResponse() ? '<h3>Страница не найдена.</h3><a href="/">На главную...</a>' : null;
         break;
-      default: //case self::rc_SUCCESS:
-        header("Content-Type: {$this->responseContentType}; charset={$this->charset}", true, $http_response_code);
-        $this->echoResponse($response);
+      case self::rc_SUCCESS:
+      case self::rc_INTERNAL_SERVER_ERROR:
+      default:
+        header("Content-Type: {$this->responseContentType}; charset={$this->charset}", true, $this->http_response_code);
         break;
     }
+    $this->echoResponse();
   }
 
-  public function echoResponse($response=null)
+  public function echoResponse()
   {
     $withTemplate = false;
     if($this->isHtmlResponse()) {
@@ -97,14 +100,14 @@ class ActionResponser
         if(is_file($templatePath)){
           $withTemplate = true;
           global $HTML;
-          $HTML = $response;
+          $HTML = $this->response;
           include $templatePath;
         }
       }
     }
 
-    if(!$withTemplate && $response!==null){
-      echo $response;
+    if(!$withTemplate && $this->response!==null){
+      echo $this->response;
     }
     exit();
   }
@@ -167,5 +170,21 @@ class ActionResponser
   public function getResponseContentType()
   {
     return $this->responseContentType;
+  }
+
+  /**
+   * @param int $http_response_code
+   */
+  public function setHttpResponseCode($http_response_code)
+  {
+    $this->http_response_code = $http_response_code;
+  }
+
+  /**
+   * @param null $response
+   */
+  public function setResponse($response)
+  {
+    $this->response = $response;
   }
 }
